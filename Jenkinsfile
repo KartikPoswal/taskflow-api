@@ -47,15 +47,15 @@ pipeline {
             }
         }
 
-        stage('Code Quality') {
-            steps {
+        
+	stage('Code Quality') {
+		steps {
                 echo '=== Stage 3: Code Quality ==='
                 withSonarQubeEnv('SonarQube') {
-                    sh 'mvn -B sonar:sonar -Dsonar.projectKey=taskflow-api'
+                    sh 'mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:3.10.0.2594:sonar -Dsonar.projectKey=taskflow-api -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_AUTH_TOKEN'
                 }
             }
         }
-
         stage('Security') {
             steps {
                 echo '=== Stage 4: Security ==='
