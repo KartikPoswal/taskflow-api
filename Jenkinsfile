@@ -47,15 +47,15 @@ pipeline {
             }
         }
 
-        
-	stage('Code Quality') {
-		steps {
+        stage('Code Quality') {
+            steps {
                 echo '=== Stage 3: Code Quality ==='
                 withSonarQubeEnv('SonarQube') {
                     sh 'mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:3.10.0.2594:sonar -Dsonar.projectKey=taskflow-api -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_AUTH_TOKEN'
                 }
             }
         }
+
         stage('Security') {
             steps {
                 echo '=== Stage 4: Security ==='
@@ -69,11 +69,11 @@ pipeline {
                 sh 'docker compose down || true'
                 sh "TAG=${TAG} ENV=staging docker compose up -d || true"
                 sh 'sleep 60'
-                sh 'curl -fsS http://localhost:8085/actuator/health | grep UP || curl -fsS http://taskflow-api-pipeline-app-1:8085/actuator/health | grep UP || true'
+                sh 'curl -fsS http://localhost:8085/actuator/health | grep UP || true'
                 echo 'Deploy stage executed (main app container started).'
             }
         }
-	
+
         stage('Release') {
             when { branch 'main' }
             steps {
@@ -82,15 +82,17 @@ pipeline {
             }
         }
 
-	stage('Monitoring') {
+        stage('Monitoring') {
             steps {
                 echo '=== Stage 7: Monitoring ==='
                 sh 'docker compose ps || true'
-                sh 'curl -fsS http://localhost:9090/-/healthy || echo "Prometheus unavailable (DinD mount limitation)"'
+                sh 'curl -fsS http://localhost:9090/-/healthy || echo "Prometheus unavailable"'
                 sh 'curl -fsS http://localhost:3000/api/health || echo "Grafana unavailable" || true'
-                echo 'Monitoring stage executed. See https://github.com/KartikPoswal/taskflow-api for full monitoring configs.'
+                echo 'Monitoring stage executed.'
             }
         }
+
+    }
 
     post {
         success { echo "Pipeline ${env.BUILD_NUMBER} succeeded — ${TAG} released." }
